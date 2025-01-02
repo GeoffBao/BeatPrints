@@ -34,7 +34,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.beatprints]
 # 默认主题
-default_theme = "Dark"
+default_theme = "Light"
 
 # 主题配置
 [tool.beatprints.themes]

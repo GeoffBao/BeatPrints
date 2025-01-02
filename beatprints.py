@@ -22,7 +22,7 @@ def select_theme():
         "Light", "Dark", "Catppuccin", "Gruvbox",
         "Nord", "RosePine", "Everforest"
     ]
-    
+
     print("\n可用的主题:")
     for i, theme in enumerate(themes, 1):
         print(f"{i}. {theme}")
