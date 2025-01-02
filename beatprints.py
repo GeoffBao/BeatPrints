@@ -9,12 +9,41 @@ def get_user_input():
     """获取用户输入的歌曲信息"""
     print("\n请输入歌曲信息:")
     track_name = input("歌曲名称: ").strip()
-    
+
     if not track_name:
         raise ValueError("歌曲名称不能为空")
-        
+
     return track_name
 
+def select_theme():
+    """选择海报主题"""
+    themes = [
+        "Light",
+        "Dark", 
+        "Catppuccin",
+        "Gruvbox",
+        "Nord",
+        "RosePine",
+        "Everforest"
+    ]
+
+    print("\n可用的主题:")
+    for i, theme in enumerate(themes, 1):
+        print(f"{i}. {theme}")
+
+    while True:
+        try:
+            choice = input("\n请选择主题编号 [1-7] (默认: 1): ").strip()
+            if not choice:
+                return "Light"
+
+            index = int(choice) - 1
+            if 0 <= index < len(themes):
+                return themes[index]
+            else:
+                print("无效的选择，请输入 1-7 之间的数字")
+        except ValueError:
+            print("无效的输入，请输入数字")
 
 def select_lyrics(lyrics_text: str) -> str:
     """让用户选择歌词部分"""
@@ -24,7 +53,7 @@ def select_lyrics(lyrics_text: str) -> str:
         if line.strip():
             print(f"{i:2d}. {line}")
     
-    print("\n请选择要使用的歌词行数（例如：1-5 或 1,3,5）")
+    print("\n请选择要使用的歌词行数 (例如: 1-5 或 1,3,5)")
     selection = input("选择（直接回车使用全部）: ").strip()
     
     if not selection:
@@ -47,11 +76,11 @@ def select_lyrics(lyrics_text: str) -> str:
 def main():
     # 加载环境变量
     dotenv.load_dotenv()
-    
+
     # 获取 Spotify 认证信息
     CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
     CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
-    
+
     if not CLIENT_ID or not CLIENT_SECRET:
         raise ValueError("请在环境变量中设置 SPOTIFY_CLIENT_ID 和 SPOTIFY_CLIENT_SECRET")
 
@@ -60,7 +89,7 @@ def main():
         sp = spotify.Spotify(CLIENT_ID, CLIENT_SECRET)
         ly = lyrics.Lyrics()
         ps = poster.Poster(save_to='posters')
-        
+
         # 获取用户输入
         track_name = get_user_input()
         print(f"\n搜索歌曲: {track_name}")
@@ -76,15 +105,20 @@ def main():
         #highlighted_lyrics = ly.select_lines(lyric_text, "5-9")
         # 选择歌词部分
         selected_lyrics = select_lyrics(lyric_text)
-        
+
+        # 选择主题
+        theme = select_theme()
+
         # 预览歌词
         print("\n歌词预览:")
         for line in lyric_text.split('\n'):
             if line.strip():
                 print(line)
 
-        # Generate the track poster
-        ps.track(metadata, selected_lyrics)
+        # 生成海报
+        print(f"\n使用 {theme} 主题生成海报...")
+        ps.track(metadata, selected_lyrics, theme)
+        #print(f"海报已保存到: posters/{search.name}_{search.artist}.png")
 
     except KeyboardInterrupt:
         print("\n操作已取消")
