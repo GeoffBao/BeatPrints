@@ -31,3 +31,32 @@ black = "^24.10.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.beatprints]
+# 默认主题
+default_theme = "Dark"
+
+# 主题配置
+[tool.beatprints.themes]
+Light = { background = "#FFFFFF", text = "#000000", secondary = "#666666" }
+Dark = { background = "#000000", text = "#FFFFFF", secondary = "#CCCCCC" }
+Catppuccin = { background = "#1E1E2E", text = "#CDD6F4", secondary = "#89B4FA" }
+Gruvbox = { background = "#282828", text = "#EBDBB2", secondary = "#B8BB26" }
+Nord = { background = "#2E3440", text = "#ECEFF4", secondary = "#88C0D0" }
+RosePine = { background = "#191724", text = "#E0DEF4", secondary = "#9CCFD8" }
+Everforest = { background = "#2B3339", text = "#D3C6AA", secondary = "#A7C080" }
+
+# 字体配置
+[tool.beatprints.fonts]
+path = "~/.local/share/fonts/BeatPrints"
+regular = "Inter-Regular.ttf"
+medium = "Inter-Medium.ttf"
+bold = "Inter-Bold.ttf"
+
+# 输出配置
+[tool.beatprints.output]
+# 默认保存路径
+save_to = "posters"
+# 图片尺寸
+width = 1080
+height = 1920

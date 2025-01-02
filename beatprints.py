@@ -2,7 +2,7 @@
 """BeatPrints CLI"""
 import os
 import dotenv
-from BeatPrints import lyrics, poster, spotify
+from BeatPrints import lyrics, poster, spotify, config
 
 
 def get_user_input():
@@ -17,31 +17,27 @@ def get_user_input():
 
 def select_theme():
     """选择海报主题"""
-    themes = [
-        "Light",
-        "Dark", 
-        "Catppuccin",
-        "Gruvbox",
-        "Nord",
-        "RosePine",
-        "Everforest"
+    theme_config = config.get_theme_config()
+    themes = list(theme_config["themes"].keys()) or [
+        "Light", "Dark", "Catppuccin", "Gruvbox",
+        "Nord", "RosePine", "Everforest"
     ]
-
+    
     print("\n可用的主题:")
     for i, theme in enumerate(themes, 1):
         print(f"{i}. {theme}")
 
     while True:
         try:
-            choice = input("\n请选择主题编号 [1-7] (默认: 1): ").strip()
+            choice = input(f"\n请选择主题编号 [1-{len(themes)}] (默认: {theme_config['default']}): ").strip()
             if not choice:
-                return "Light"
+                return theme_config["default"]
 
             index = int(choice) - 1
             if 0 <= index < len(themes):
                 return themes[index]
             else:
-                print("无效的选择，请输入 1-7 之间的数字")
+                print(f"无效的选择，请输入 1-{len(themes)} 之间的数字")
         except ValueError:
             print("无效的输入，请输入数字")
 
@@ -88,7 +84,9 @@ def main():
         # 初始化组件
         sp = spotify.Spotify(CLIENT_ID, CLIENT_SECRET)
         ly = lyrics.Lyrics()
-        ps = poster.Poster(save_to='posters')
+        # 使用配置中的输出路径
+        output_config = config.get_output_config()
+        ps = poster.Poster(save_to=output_config["save_to"])
 
         # 获取用户输入
         track_name = get_user_input()
@@ -106,7 +104,7 @@ def main():
         # 选择歌词部分
         selected_lyrics = select_lyrics(lyric_text)
 
-        # 选择主题
+        # 取消注释主题选择
         theme = select_theme()
 
         # 预览歌词
@@ -115,10 +113,9 @@ def main():
             if line.strip():
                 print(line)
 
-        # 生成海报
+        # 使用选择的主题生成海报
         print(f"\n使用 {theme} 主题生成海报...")
-        ps.track(metadata, selected_lyrics, theme)
-        #print(f"海报已保存到: posters/{search.name}_{search.artist}.png")
+        ps.track(metadata, selected_lyrics, theme=theme)
 
     except KeyboardInterrupt:
         print("\n操作已取消")
