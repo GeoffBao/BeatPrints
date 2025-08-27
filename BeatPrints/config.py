@@ -3,13 +3,21 @@ import tomli
 from pathlib import Path
 from typing import Dict, Any
 
+_CONFIG_CACHE: Dict[str, Any] | None = None
+
 def load_config() -> Dict[str, Any]:
     """加载配置文件"""
+    global _CONFIG_CACHE
+    if _CONFIG_CACHE is not None:
+        return _CONFIG_CACHE
+
     config_path = Path("pyproject.toml")
     if config_path.exists():
         with open(config_path, "rb") as f:
-            return tomli.load(f).get("tool", {}).get("beatprints", {})
-    return {}
+            _CONFIG_CACHE = tomli.load(f).get("tool", {}).get("beatprints", {})
+    else:
+        _CONFIG_CACHE = {}
+    return _CONFIG_CACHE
 
 def get_theme_config():
     """获取主题配置"""

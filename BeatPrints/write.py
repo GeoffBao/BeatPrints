@@ -12,6 +12,20 @@ from typing import Optional, Dict, Literal, Tuple, List
 
 from .consts import P_FONTS
 
+# Simple in-memory caches to avoid repeated disk IO and parsing
+_FONT_FILES_CACHE: Dict[str, Dict[str, TTFont]] = {}
+_TRUETYPE_CACHE: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
+
+
+def _get_truetype(path: str, size: int) -> ImageFont.FreeTypeFont:
+    key = (path, size)
+    cached = _TRUETYPE_CACHE.get(key)
+    if cached is not None:
+        return cached
+    ft = ImageFont.truetype(path, size)
+    _TRUETYPE_CACHE[key] = ft
+    return ft
+
 
 def _load_fonts(*font_paths: str) -> Dict[str, TTFont]:
     """
@@ -23,8 +37,18 @@ def _load_fonts(*font_paths: str) -> Dict[str, TTFont]:
     Returns:
         dict: A dictionary mapping font paths to font objects.
     """
-    fonts = {}
+    fonts: Dict[str, TTFont] = {}
     for path in font_paths:
+        cached = None
+        # Check per-weight cache bucket later; here we cache raw TTFont by path
+        for bucket in _FONT_FILES_CACHE.values():
+            if path in bucket:
+                cached = bucket[path]
+                break
+        if cached is not None:
+            fonts[path] = cached
+            continue
+
         font = TTFont(path)
         fonts[path] = font
     return fonts
@@ -53,7 +77,13 @@ def font(weight: Literal["Regular", "Bold", "Light"]) -> Dict[str, TTFont]:
         os.path.join(fonts_path, family, f"{family}-{weight}.ttf")
         for family in font_families
     ]
-    return _load_fonts(*font_paths)
+    # Return cached if available
+    if weight in _FONT_FILES_CACHE:
+        return _FONT_FILES_CACHE[weight]
+
+    loaded = _load_fonts(*font_paths)
+    _FONT_FILES_CACHE[weight] = loaded
+    return loaded
 
 
 def _check_glyph(font: TTFont, glyph: str) -> bool:
@@ -160,7 +190,7 @@ def render_singleline(
 
     # Render each character
     for char, font_path in formatted_text:
-        font = ImageFont.truetype(font_path, size)
+        font = _get_truetype(font_path, size)
 
         # Get char bounding box
         char_box = font.getbbox(char)
@@ -201,7 +231,7 @@ def calculate_text_width(text: str, fonts: Dict[str, TTFont], size: int) -> int:
 
     # Sum widths of all words
     for word, path in formatted_text:
-        font = ImageFont.truetype(path, size)
+        font = _get_truetype(path, size)
 
         # Add word width
         total_width += font.getlength(word)
@@ -282,7 +312,7 @@ def heading(
     # Adjust font size to fit within max_width.
     while True:
         for word, font_path in words_fonts:
-            font = ImageFont.truetype(font_path, size)
+            font = _get_truetype(font_path, size)
             total_width += font.getlength(word)
 
         if total_width > max_width:

@@ -61,6 +61,7 @@ class Spotify:
         self.CLIENT_ID = CLIENT_ID
         self.CLIENT_SECRET = CLIENT_SECRET
         self.__BASE_URL = "https://api.spotify.com/v1"
+        self.__session = requests.Session()
         self.__authorization_header()
 
     def __authorization_header(self) -> None:
@@ -77,7 +78,7 @@ class Spotify:
         }
 
         # Request token from Spotify API
-        data = requests.post(endpoint, headers=headers, params=payload)
+        data = self.__session.post(endpoint, headers=headers, params=payload)
         token = data.json()["access_token"]
 
         # Store authorization header for use in API requests
@@ -137,7 +138,7 @@ class Spotify:
 
         tracklist = []
         params = {"q": query, "type": "track", "limit": limit}
-        response = requests.get(
+        response = self.__session.get(
             f"{self.__BASE_URL}/search", params=params, headers=self.__AUTH_HEADER
         ).json()
 
@@ -151,7 +152,7 @@ class Spotify:
 
             # Get the track's album using the album ID
             id = track["album"]["id"]
-            album = requests.get(
+            album = self.__session.get(
                 f"{self.__BASE_URL}/albums/{id}", headers=self.__AUTH_HEADER
             ).json()
 
@@ -197,7 +198,7 @@ class Spotify:
 
         albumlist = []
         params = {"q": query, "type": "album", "limit": limit}
-        response = requests.get(
+        response = self.__session.get(
             f"{self.__BASE_URL}/search", params=params, headers=self.__AUTH_HEADER
         ).json()
 
@@ -209,7 +210,7 @@ class Spotify:
         # Process each album to get details and tracklist
         for album in albums:
             id = album["id"]
-            album_details = requests.get(
+            album_details = self.__session.get(
                 f"{self.__BASE_URL}/albums/{id}", headers=self.__AUTH_HEADER
             ).json()
 
