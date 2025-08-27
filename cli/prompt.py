@@ -1,15 +1,39 @@
 import questionary
 
 from rich import print
-from BeatPrints import lyrics, spotify, poster, errors
+# Import submodules explicitly to avoid eager heavy imports via package __init__
+from BeatPrints import lyrics as lyrics_mod
+from BeatPrints import spotify as spotify_mod
+from BeatPrints import poster as poster_mod
+from BeatPrints import errors as errors_mod
 
 from cli.conf import *
 from cli import exutils, validate
 
-# Initialize components
-ly = lyrics.Lyrics()
-ps = poster.Poster(POSTERS_DIR)
-sp = spotify.Spotify(CLIENT_ID, CLIENT_SECRET)
+_ly = None
+_ps = None
+_sp = None
+
+
+def _get_lyrics():
+    global _ly
+    if _ly is None:
+        _ly = lyrics_mod.Lyrics()
+    return _ly
+
+
+def _get_poster():
+    global _ps
+    if _ps is None:
+        _ps = poster_mod.Poster(POSTERS_DIR)
+    return _ps
+
+
+def _get_spotify():
+    global _sp
+    if _sp is None:
+        _sp = spotify_mod.Spotify(CLIENT_ID, CLIENT_SECRET)
+    return _sp
 
 
 def select_track(limit: int):
@@ -27,7 +51,7 @@ def select_track(limit: int):
 
     while repeat:
         query = questionary.text(prompt, style=exutils.default).ask()
-        result = sp.get_track(query, limit=limit)
+        result = _get_spotify().get_track(query, limit=limit)
 
         # Clear the Screen
         exutils.clear()
@@ -104,7 +128,7 @@ def handle_lyrics(track: spotify.TrackMetadata):
         str: The selected lyrics from the track.
     """
     try:
-        lyrics_result = ly.get_lyrics(track)
+        lyrics_result = _get_lyrics().get_lyrics(track)
         print(exutils.format_lyrics(track.name, track.artist, lyrics_result))
 
         selection_range = questionary.text(
@@ -115,7 +139,7 @@ def handle_lyrics(track: spotify.TrackMetadata):
 
         return ly.select_lines(lyrics_result, selection_range)
 
-    except errors.NoLyricsAvailable:
+    except errors_mod.NoLyricsAvailable:
         print("\n😦 • Couldn't find lyrics from sources.")
 
         return questionary.text(
@@ -189,7 +213,7 @@ def create_poster():
 
             if track:
                 lyrics = handle_lyrics(track)
-                ps.track(track, lyrics, accent, theme, image)
+                _get_poster().track(track, lyrics, accent, theme, image)
 
         else:
             index = questionary.confirm(
@@ -202,7 +226,7 @@ def create_poster():
 
             album = select_album(SEARCH_LIMIT, shuffle)
             if album:
-                ps.album(album, index, accent, theme, image)
+                _get_poster().album(album, index, accent, theme, image)
 
     except KeyboardInterrupt and KeyError:
         print("🤚 Exiting...")

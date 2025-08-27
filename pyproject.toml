@@ -11,6 +11,17 @@ repository = "https://github.com/TrueMyst/BeatPrints"
 
 packages = [{ include = "BeatPrints" }, { include = "cli" }]
 
+# Exclude non-package content and large root assets from distributions
+exclude = [
+    "examples/**",
+    "docs/**",
+    "lyrics/**",
+    "/*.png",
+]
+
+# Ensure runtime assets (fonts/templates) are shipped in wheels/sdists
+include = ["BeatPrints/assets/**"]
+
 [tool.poetry.dependencies]
 python = "^3.10"
 requests = "^2.32.3"
